@@ -70,7 +70,7 @@ class RegisterFragment : Fragment() {
         viewModel.passwordMatchError.observe(viewLifecycleOwner) { isError ->
             if (isError) {
                 // Mostramos el error en el TextInputLayout de confirmar contraseña
-                binding.tilRegisterConfirmPassword.error = getString(R.string.error_password_mismatch)
+                binding.tilRegisterConfirmPassword.error = getString(R.string.error_password_mismatch) // res/strings.xmls
             } else {
                 // Quitamos el error (null)
                 binding.tilRegisterConfirmPassword.error = null

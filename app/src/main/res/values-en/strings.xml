@@ -1,0 +1,25 @@
+<resources>
+    <string name="app_name">My Application</string>
+
+    <string name="login_title">Login</string>
+    <string name="label_usuario">Username</string>
+    <string name="label_contrasena">Password</string>
+    <string name="btn_iniciar_sesion">Log In</string>
+    <string name="btn_google_login">Sign in with Google</string>
+    <string name="link_crear_cuenta">Don\'t have an account? Create one</string>
+
+    <string name="register_title">Create Account</string>
+    <string name="hint_username">Username</string>
+    <string name="hint_password">Password</string>
+    <string name="hint_confirm_password">Confirm password</string>
+    <string name="button_create_account">Register</string>
+
+    <string name="button_login">Log In</string>
+    <string name="button_google_login">Google</string>
+    <string name="text_create_account_prompt">Create an account</string>
+
+    <string name="snackbar_not_implemented">Feature not available yet</string>
+    <string name="snackbar_action_close">Close</string>
+    <string name="error_password_mismatch">Passwords do not match</string>
+    <string name="hint_birth_date">Birth date</string>
+</resources>

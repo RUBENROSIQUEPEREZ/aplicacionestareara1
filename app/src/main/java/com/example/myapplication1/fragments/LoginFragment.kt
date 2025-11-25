@@ -89,9 +89,9 @@ class LoginFragment : Fragment() {
         binding.btnGoogleLogin.setOnClickListener {
             Snackbar.make(
                 binding.root,
-                getString(R.string.snackbar_not_implemented), // Asegúrate de definirlo en strings.xml
+                getString(R.string.snackbar_not_implemented), // res/strings.xmls
                 Snackbar.LENGTH_LONG
-            ).setAction(getString(R.string.snackbar_action_close)){}.show()
+            ).setAction(getString(R.string.snackbar_action_close)){}.show() // res/strings.xmls
         }
     }
 
