@@ -15,17 +15,19 @@ import com.example.myapplication1.viewmodels.NewUserViewModel
 
 class RegisterFragment : Fragment() {
 
-    // Configuración de View Binding
+    // Accedo por ViewBinding, permite acceder a las vistas del layout de forma segura
     private var _binding: FragmentRegisterBinding? = null
     private val binding get() = _binding!!
 
     // Instancia del ViewModel usando el delegado 'by viewModels()'
+    // Esto hace que sobreviva a cambios de configuracion
     private val viewModel: NewUserViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        // Se "infla" y creamos el binding
         _binding = FragmentRegisterBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -33,37 +35,38 @@ class RegisterFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        setupInputs()
-        setupObservers()
-        setupButtons()
+        setupInputs() // Captura entrada de texto del usuario
+        setupObservers()  //Observa LiveData del ViewModel
+        setupButtons() // Acciones del botón de registro
     }
 
     // 1. Capturar lo que escribe el usuario
     private fun setupInputs() {
-        // Usuario
+        // Captura del nombre de usuario
         binding.tilRegisterUsername.editText?.doOnTextChanged { text, _, _, _ ->
             viewModel.username = text.toString()
         }
 
-        // Contraseña
+        // Captura de la contraseña
         binding.tilRegisterPassword.editText?.doOnTextChanged { text, _, _, _ ->
             viewModel.password = text.toString()
         }
 
-        // Confirmar Contraseña
+        // Captura de la confirmación de contraseña
         binding.tilRegisterConfirmPassword.editText?.doOnTextChanged { text, _, _, _ ->
             viewModel.confirmPassword = text.toString()
         }
     }
 
-    // 2. Observar los cambios del ViewModel (LiveData)
+    // 2. Observar los cambios del ViewModel (LiveData), sin necesidad de comprobar valores manualmente
     private fun setupObservers() {
-        // A. Habilitar/Deshabilitar botón
+        // Habilitar/Deshabilitar botón
+        //Con viewLifeCycleOwner se esta observando siempre
         viewModel.isRegisterButtonEnabled.observe(viewLifecycleOwner) { isEnabled ->
             binding.btnRegister.isEnabled = isEnabled
         }
 
-        // B. Mostrar/Ocultar error de contraseña
+        // Mostrar/Ocultar error de contraseña
         viewModel.passwordMatchError.observe(viewLifecycleOwner) { isError ->
             if (isError) {
                 // Mostramos el error en el TextInputLayout de confirmar contraseña
@@ -74,7 +77,7 @@ class RegisterFragment : Fragment() {
             }
         }
 
-        // C. Navegar si el registro es exitoso
+        // Navegar si el registro es exitoso
         viewModel.registrationSuccess.observe(viewLifecycleOwner) { isSuccess ->
             if (isSuccess) {
                 Toast.makeText(context, "Cuenta creada con éxito", Toast.LENGTH_SHORT).show()
@@ -93,6 +96,7 @@ class RegisterFragment : Fragment() {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        // Evitamos fugas de memoria asociadas al ViewBinding
         _binding = null
     }
 }

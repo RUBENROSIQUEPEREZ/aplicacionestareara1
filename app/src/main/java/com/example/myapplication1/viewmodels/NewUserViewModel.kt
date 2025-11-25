@@ -20,30 +20,36 @@ class NewUserViewModel : ViewModel() {
 
     // Variables para almacenar los datos del formulario
     // Usamos 'setters' personalizados para validar cada vez que el dato cambia
+
+    //Campo de usuario
     var username: String = ""
         set(value) {
             field = value
             validateForm()
         }
 
+    //Campo de contraseña
     var password: String = ""
         set(value) {
             field = value
             validateForm()
         }
 
+    // Campo para confirmar contraseña
     var confirmPassword: String = ""
         set(value) {
             field = value
             validateForm()
         }
 
-    // Lógica de validación privada
+    // Lógica de validación del register
+
     private fun validateForm() {
-        // Regla 1: Usuario >= 1 carácter y Contraseña >= 4 caracteres
+
+        //1: Usuario >= 1 carácter y Contraseña >= 4 caracteres
         val isMinLengthValid = username.length >= 1 && password.length >= 4
 
-        // Regla 2: Las contraseñas deben coincidir (solo validamos si ambas tienen texto)
+        // Regla 2: Las contraseñas deben coincidir
         val passwordsCoincide = password == confirmPassword
 
         // Actualizar estado de Error:

@@ -7,7 +7,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.widget.doOnTextChanged // Import para listeners de texto modernos
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.viewModels // ¡DELEGADO CLAVE!
+import androidx.fragment.app.viewModels // Delegado para instaanciar ViewModels
 import androidx.navigation.fragment.findNavController
 import com.example.myapplication1.R
 import com.example.myapplication1.databinding.FragmentLoginBinding
@@ -16,10 +16,12 @@ import com.google.android.material.snackbar.Snackbar
 
 class LoginFragment : Fragment() {
 
+    //ViewBinding: acceso seguro a las vistas
+    //ViewBinding: acceso seguro a las vistas del layout
     private var _binding: FragmentLoginBinding? = null
     private val binding get() = _binding!!
 
-    // 1. INSTANCIACIÓN DEL VIEWMODEL (by viewModels())
+    // ViewModel usando el delegado 'by viewModels()'
     // Esta instancia sobrevive a los cambios de configuración.
     private val authViewModel: AuthViewModel by viewModels()
 
@@ -27,96 +29,94 @@ class LoginFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        //Se "infla" el layout y guardamos el binding
         _binding = FragmentLoginBinding.inflate(inflater, container, false)
+        // Se devuelve la vista raíz del Binding
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // Configuración de Listeners y Observadores
+        // Configuramos listeners de los EditText
         setupInputListeners()
+
+        // Configuramos acciones de botones
         setupButtonListeners()
+
+        // Observamos LiveData del ViewModel
         setupViewModelObservers()
 
-        // Inicializar el estado del botón al cargar el Fragmento
+        // Llamada inicial para evaluar si el botón debe empezar habilitado o no
         authViewModel.checkCredentialsValidity()
     }
 
-    /**
-     * Conecta los campos de texto del XML con las variables del ViewModel.
-     * La tarea requiere usar TextInputLayouts (Layout de Material Design),
-     * por lo que accedemos al EditText interno (editText).
-     */
+
+    //Asocia los campos de texto del XML con las propiedades del ViewModel.
+    //Cada vez que el usuario escribe, el ViewModel recibe el nuevo valor.
     private fun setupInputListeners() {
-        // Listener para el nombre de usuario
+
+        // Listener para el campo usuario
         binding.tilUsername.editText?.doOnTextChanged { text, _, _, _ ->
-            // Actualiza la propiedad 'username' del ViewModel
-            authViewModel.username = text.toString()
-            // No es necesario llamar aquí a checkCredentialsValidity(), ya se llama en el setter del ViewModel.
+            // Mandamos el texto al ViewModel
+            authViewModel.setUsername(text.toString())
         }
 
-        // Listener para la contraseña
+        // Listener para el campo contraseña
         binding.tilPassword.editText?.doOnTextChanged { text, _, _, _ ->
-            // Actualiza la propiedad 'password' del ViewModel
-            authViewModel.password = text.toString()
+            // Igual para la contraseña
+            authViewModel.setPassword(text.toString())
         }
     }
 
-    /**
-     * Configura los listeners de clic de los botones.
-     */
-    private fun setupButtonListeners() {
 
-        // Botón INICIAR SESIÓN
+     // Configura los listeners de clic de los botones.
+
+    private fun setupButtonListeners(){
+
+        // Botón de iniciar sesion
         binding.btnLogin.setOnClickListener {
-            // Llama a la lógica de autenticación del ViewModel
+            // Llama al ViewModel para realigar el login
             authViewModel.performLogin()
         }
 
-        // Botón CREAR CUENTA (Navegación)
+        // Texto de crear cuenta en el Login | Navegacion al register fragment
         binding.tvCreateAccount.setOnClickListener {
             findNavController().navigate(R.id.action_loginFragment_to_registerFragment)
         }
 
-        // Botón INICIAR SESIÓN EN GOOGLE (Requisito de SnackBar)
+        // Botón de iniciar sesion en GOOGLE (
         binding.btnGoogleLogin.setOnClickListener {
-            // Muestra el SnackBar requerido por la tarea
             Snackbar.make(
                 binding.root,
                 getString(R.string.snackbar_not_implemented), // Asegúrate de definirlo en strings.xml
                 Snackbar.LENGTH_LONG
-            ).setAction(getString(R.string.snackbar_action_close)) { /* Acción vacía */ }.show()
+            ).setAction(getString(R.string.snackbar_action_close)){}.show()
         }
     }
 
-    /**
-     * Suscribe el Fragmento a los cambios de LiveData del ViewModel.
-     */
     private fun setupViewModelObservers() {
 
-        // 2. OBSERVACIÓN DEL ESTADO DEL BOTÓN
+        //Observa el estado del boton
         authViewModel.isLoginButtonEnabled.observe(viewLifecycleOwner) { isEnabled ->
-            // Actualiza el estado del botón cuando cambia la validez de los campos.
             binding.btnLogin.isEnabled = isEnabled
         }
 
-        // 3. OBSERVACIÓN DEL RESULTADO DEL LOGIN
+        //Observa el resultado del login
         authViewModel.loginResult.observe(viewLifecycleOwner) { isSuccess ->
             if (isSuccess) {
-                // TAREA: Si es exitoso, la tarea requeriría navegar a la pantalla principal.
-                // Como no existe esa pantalla todavía, simplemente mostramos un mensaje de éxito.
+                //Login correcto, mostramos el mensaje de bienvenida
                 Toast.makeText(context, "Login Correcto. ¡Bienvenido, admin!", Toast.LENGTH_SHORT).show()
             } else {
-                // Login fallido: Muestra un mensaje de error o marca los campos.
+                // Login fallido, muestra un mensaje de error
                 Toast.makeText(context, "Credenciales incorrectas.", Toast.LENGTH_LONG).show()
-                // Opcional: limpiar los campos o marcar error en los TextInputLayouts
             }
         }
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
+        //Evita fugas de memoria
         _binding = null
     }
 }
