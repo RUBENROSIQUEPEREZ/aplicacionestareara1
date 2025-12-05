@@ -7,15 +7,15 @@ import com.example.myapplication1.fragments.ListFragment
 
 class ViewPagerAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {
 
-    // ¿Cuántas pestañas tenemos? 2 (Lista y Favoritos)
+    // funcion para decirle cuantas pestañas vamos a tener en total
     override fun getItemCount(): Int = 2
 
-    // ¿Qué fragmento cargo en cada posición?
+    // funcion que decide que pantalla cargar dependiendo de la posicion
     override fun createFragment(position: Int): Fragment {
         return when (position) {
-            0 -> ListFragment() // Primera pestaña
-            1 -> FavFragment()  // Segunda pestaña
-            else -> ListFragment() // Por defecto (seguridad)
+            0 -> ListFragment() // si estamos en la primera posicion cargamos la lista normal
+            1 -> FavFragment()  // si estamos en la segunda cargamos la pantalla de favoritos
+            else -> ListFragment() // esto es por seguridad por si falla algo cargar la lista
         }
     }
 }

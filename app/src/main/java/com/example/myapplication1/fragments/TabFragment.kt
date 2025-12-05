@@ -5,12 +5,14 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import com.example.myapplication1.R
 import com.example.myapplication1.databinding.FragmentTabBinding
 import com.example.myapplication1.viewpager.ViewPagerAdapter
 import com.google.android.material.tabs.TabLayoutMediator
 
 class TabFragment : Fragment() {
 
+    // variable para poder acceder a los elementos del xml
     private var _binding: FragmentTabBinding? = null
     private val binding get() = _binding!!
 
@@ -18,6 +20,7 @@ class TabFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
+        // cargamos el diseño visual de este fragmento
         _binding = FragmentTabBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -25,24 +28,25 @@ class TabFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 1. Instanciamos nuestro adaptador (El cerebro de las pestañas)
+        // creamos el adaptador que se encarga de cambiar los fragmentos
         val adapter = ViewPagerAdapter(this)
 
-        // 2. Se lo asignamos al ViewPager (El visualizador)
+        // le decimos al viewpager que use ese adaptador para funcionar
         binding.viewPager.adapter = adapter
 
-        // 3. La MAGIA: TabLayoutMediator conecta las pestañas con el ViewPager
-        // Aquí definimos qué título lleva cada pestaña
+        // conectamos las pestañas de arriba con el deslizador de abajo
         TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
+            // ponemos los nombres a cada pestaña segun su posicion
             when (position) {
-                0 -> tab.text = "Lista"      // Título de la primera pestaña
-                1 -> tab.text = "Favoritos"  // Título de la segunda
+                0 -> tab.text = getString(R.string.tab_list)
+                1 -> tab.text = getString(R.string.tab_favorites)
             }
-        }.attach() // ¡Muy importante llamar a attach()!
+        }.attach() // esto es necesario para que se active la conexion
     }
 
     override fun onDestroyView() {
         super.onDestroyView()
+        // limpiamos la variable binding para liberar memoria
         _binding = null
     }
 }

@@ -43,16 +43,13 @@ class ListFragment : Fragment() {
         // Preparamos la estantería (RecyclerView) para que sea una lista vertical
         binding.rvBooks.layoutManager = LinearLayoutManager(context)
 
-        // OBSERVADOR DE DATOS:
         // Nos quedamos vigilando la lista maestra del ViewModel.
         // Este código salta automáticamente cuando la lista cambia (ej: al iniciar la app).
         viewModel.books.observe(viewLifecycleOwner) { bookList ->
 
-            // --- DIFERENCIA CLAVE 1: SIN FILTROS ---
             // Aquí le pasamos la lista COMPLETA ('bookList') al adaptador.
             // Queremos ver todos los libros, sean favoritos o no.
 
-            // --- DIFERENCIA CLAVE 2: INTERACCIÓN ACTIVADA ---
             // Al crear el adaptador, NO bloqueamos los clics.
             // Definimos qué pasa cuando el usuario toca la estrella: llamamos a 'onFavoriteClicked'.
             val adapter = BookAdapter(bookList) { book ->
@@ -73,12 +70,10 @@ class ListFragment : Fragment() {
         // 2. Mostramos un mensaje de confirmación al usuario
         val mensaje = if (book.isFavorite) "Marcado como favorito" else "Desmarcado"
 
-        val sonidofav = if (book.isFavorite) R.raw.sound else R.raw.sound
+        val sonidofav = if (book.isFavorite) R.raw.sound1 else R.raw.sound1
 
         val mediaPlayer = MediaPlayer.create(context, sonidofav)
         mediaPlayer.start()
-
-
 
         Toast.makeText(context, "${book.title}: $mensaje", Toast.LENGTH_SHORT).show()
     }

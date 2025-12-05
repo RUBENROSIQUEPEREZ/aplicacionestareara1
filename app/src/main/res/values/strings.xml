@@ -22,6 +22,13 @@
     <string name="snackbar_action_close">Cerrar</string>
     <string name="error_password_mismatch">Las contraseñas no coinciden</string>
     <string name="hint_birth_date">Fecha de nacimiento</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <string name="login_success">Inicio de sesión exitoso</string>
+    <string name="login_error">Error en el inicio de sesión</string>
+
+    <string name="tab_list">Lista</string>
+    <string name="tab_favorites">Favoritos</string>
+
+
+
 </resources>

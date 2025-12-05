@@ -1,6 +1,5 @@
 package com.example.myapplication1.viewmodels
 
-import android.R
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -8,78 +7,83 @@ import java.util.Calendar
 
 class NewUserViewModel : ViewModel() {
 
-    // 1. LiveData para habilitar/deshabilitar el botón de registro
+    // variables livedata para que la pantalla sepa cuando cambiar cosas
+    // el guion bajo es privado para nosotros y la otra publica para que la pantalla solo lea
+
+    // 1. controla si el boton de registrar se puede pulsar o no
     private val _isRegisterButtonEnabled = MutableLiveData<Boolean>()
     val isRegisterButtonEnabled: LiveData<Boolean> = _isRegisterButtonEnabled
 
-    // 2. LiveData para mostrar error si las contraseñas no coinciden
+    // 2. controla si hay que enseñar el mensaje rojo de error de contraseña
     private val _passwordMatchError = MutableLiveData<Boolean>()
     val passwordMatchError: LiveData<Boolean> = _passwordMatchError
 
-    // 3. LiveData para notificar que el registro fue exitoso (navegar)
+    // 3. avisa cuando el registro se ha completado para cambiar de pantalla
     private val _registrationSuccess = MutableLiveData<Boolean>()
     val registrationSuccess: LiveData<Boolean> = _registrationSuccess
 
-    // Variables para almacenar los datos del formulario
-    // Usamos 'setters' personalizados para validar cada vez que el dato cambia
+    // variables para guardar lo que escribe el usuario
+    // usamos set para que cada vez que cambie el valor se compruebe todo automaticamente
 
-    //Campo de usuario
+    // campo de usuario
     var username: String = ""
         set(value) {
             field = value
-            validateForm()
+            validateForm() // validamos cada vez que se escribe una letra
         }
 
-    //Campo de contraseña
+    // campo de contraseña
     var password: String = ""
         set(value) {
             field = value
             validateForm()
         }
 
-    // Campo para confirmar contraseña
+    // campo para confirmar contraseña
     var confirmPassword: String = ""
         set(value) {
             field = value
             validateForm()
         }
 
+    // campo de la fecha de nacimiento
     var birthDate: String = ""
         set(value) {
             field = value
             validateForm()
         }
 
-    // Lógica de validación del register
-
+    // logica para comprobar si el formulario esta bien relleno
     private fun validateForm() {
 
-        //1: Usuario >= 1 carácter y Contraseña >= 4 caracteres
+        // regla 1 el usuario tiene que tener texto y la contraseña al menos 4 letras
         val isMinLengthValid = username.length >= 1 && password.length >= 4
 
-        // Regla 2: Las contraseñas deben coincidir
+        // regla 2 las dos contraseñas tienen que ser identicas
         val passwordsCoincide = password == confirmPassword
 
+        // regla 3 tiene que haber seleccionado una fecha
         val isDateSelected = birthDate.isNotEmpty()
 
-        // Actualizar estado de Error:
-        // Mostramos error SOLO si ambos campos tienen texto y NO coinciden.
+        // logica del error
+        // solo mostramos el error si ha escrito en los dos campos y son distintos
         if (password.isNotEmpty() && confirmPassword.isNotEmpty() && !passwordsCoincide) {
             _passwordMatchError.value = true
         } else {
             _passwordMatchError.value = false
         }
 
-        // Actualizar estado del Botón:
-        // Se activa si cumple longitud mínima Y las contraseñas coinciden
+        // logica del boton
+        // solo activamos el boton si la longitud esta bien y las contraseñas coinciden
+        // aqui podrias añadir tambien isDateSelected si fuera obligatorio
         _isRegisterButtonEnabled.value = isMinLengthValid && passwordsCoincide
     }
 
-    // Función pública para ejecutar el registro (llamada desde el botón)
+    // funcion publica que se llama al pulsar el boton
     fun createAccount() {
-        // Verificamos una última vez (programación defensiva)
+        // comprobacion de seguridad final
         if (_isRegisterButtonEnabled.value == true) {
-            // Simulamos éxito y notificamos al fragmento
+            // avisamos a la pantalla de que todo ha ido bien para que navegue
             _registrationSuccess.value = true
         } else {
             _registrationSuccess.value = false

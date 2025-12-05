@@ -1,53 +1,59 @@
 package com.example.myapplication1.viewmodels
 
-import android.R
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.myapplication1.R // importamos r para poder acceder a las imagenes facil
 import com.example.myapplication1.recycler.Book
-
-
 
 class ListViewModel : ViewModel() {
 
-    // 1. La "Caja" que contiene la lista de libros
-    // Usamos MutableLiveData para poder cambiarla si queremos
+    // esta es la caja que guarda la lista de culturistas
+    // es mutable porque nosotros la vamos a modificar desde aqui dentro
     private val _books = MutableLiveData<List<Book>>()
+
+    // esta es la version que ven los fragments
+    // es publica pero no se puede modificar desde fuera por seguridad
     val books: LiveData<List<Book>> = _books
 
-    // 2. Al arrancar el ViewModel, cargamos los datos iniciales
+    // este bloque se ejecuta solo una vez al crear el viewmodel
     init {
         loadData()
     }
 
+    // funcion para cargar los datos iniciales
     fun loadData() {
-        // Aquí movemos la lista que tenías antes en los fragments
+        // creamos la lista con tus datos personalizados
+        // asegurate de que las fotos esten en la carpeta drawable
         val initialList = listOf(
-            Book(1,"Josema Beast","Posicion 3 Mr Oylmpia Classic Physique",imageResId = com.example.myapplication1.R.drawable.josemabeast),
-            Book(2, "Joan Pradells", "2 posicion Praga Open ",imageResId = com.example.myapplication1.R.drawable.joanpradells),
-            Book(3, "Angel Calderon", "2 Posicion Mr Oympia 212", imageResId = com.example.myapplication1.R.drawable.angelcalderon),
-            Book(4, "Mauro Fialho", "Clasificado para el Mr Olympia", imageResId = com.example.myapplication1.R.drawable.maurofialho),
-            Book(5, "Chris Bumstedd", "6 veces campeon del Mr Olympia.", imageResId = com.example.myapplication1.R.drawable.cbum)
+            Book(1, "Josema Beast", "Posicion 3 Mr Oylmpia Classic Physique", R.drawable.josemabeast),
+            Book(2, "Joan Pradells", "2 posicion Praga Open ", R.drawable.joanpradells),
+            Book(3, "Angel Calderon", "2 Posicion Mr Oympia 212", R.drawable.angelcalderon),
+            Book(4, "Mauro Fialho", "Clasificado para el Mr Olympia", R.drawable.maurofialho),
+            Book(5, "Chris Bumstedd", "6 veces campeon del Mr Olympia.", R.drawable.cbum)
         )
+        // metemos la lista en la caja livedata para que la pantalla se actualice
         _books.value = initialList
     }
 
-    // 3. Función para marcar/desmarcar favorito
-    // Esta función la llamará el Fragment cuando toques la estrella
+    // funcion para cambiar el corazon de favorito
     fun toggleFavorite(book: Book) {
-        // Truco: Para que LiveData avise del cambio, necesitamos actualizar la lista
-        // Creamos una copia de la lista actual para modificarla
+        // hacemos una copia de la lista actual para poder tocarla
         val currentList = _books.value?.toMutableList() ?: return
 
-        // Buscamos el libro por su ID y le cambiamos el estado
+        // buscamos en que posicion esta el culturista que hemos tocado
         val index = currentList.indexOfFirst { it.id == book.id }
+
         if (index != -1) {
-            // Actualizamos el objeto en la lista
-            // (Nota: Como Book es data class, es mejor copiarlo cambiando el valor)
+            // creamos una copia del culturista con el valor de favorito cambiado
+            // esto es necesario porque en kotlin las clases de datos son fijas
             val updatedBook = currentList[index].copy(isFavorite = book.isFavorite)
+
+            // sustituimos el viejo por el nuevo en la lista
             currentList[index] = updatedBook
 
-            // ¡IMPORTANTE! Al asignar el valor de nuevo, los Observers (Fragments) se enteran
+            // guardamos la lista nueva en la caja livedata
+            // esto hace que las dos pantallas (lista y favoritos) se actualicen solas
             _books.value = currentList
         }
     }

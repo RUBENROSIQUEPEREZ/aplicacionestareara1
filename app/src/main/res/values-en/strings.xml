@@ -22,4 +22,10 @@
     <string name="snackbar_action_close">Close</string>
     <string name="error_password_mismatch">Passwords do not match</string>
     <string name="hint_birth_date">Birth date</string>
+
+    <string name="login_success">Inicio de sesión exitoso</string>
+    <string name="login_error">Error en el inicio de sesión</string>
+
+    <string name="tab_list">List</string>
+    <string name="tab_favorites">Favourites</string>
 </resources>

@@ -1,13 +1,9 @@
 package com.example.myapplication1.recycler
 
-/*
-Data class:
-Usamos esto cuando una clase solo sirve para guardar datos. Nos regala funciones útiles automáticamente (como toString() para ver los datos en los logs).
-*/
 data class Book(
-    val id: Int,                // Identificador único (muy útil para bases de datos)
-    val title: String,          // Título del libro
-    val description: String,    // Sinopsis
-    val imageResId: Int,        // ID de la imagen en drawable (ej: R.drawable.harry_potter)
-    var isFavorite: Boolean = false // Estado: ¿Está marcado como favorito?
+    val id: Int,                // identificador unico para saber cual es cual en la base de datos
+    val title: String,          // el nombre del culturista o titulo del elemento
+    val description: String,    // la descripcion o info extra que sale debajo
+    val imageResId: Int,        // aqui guardamos el numero de la foto en drawable no el archivo entero
+    var isFavorite: Boolean = false // variable para saber si le hemos dado al corazon se pone var porque cambia
 )
