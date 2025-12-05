@@ -22,4 +22,6 @@
     <string name="snackbar_action_close">Cerrar</string>
     <string name="error_password_mismatch">Las contraseñas no coinciden</string>
     <string name="hint_birth_date">Fecha de nacimiento</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

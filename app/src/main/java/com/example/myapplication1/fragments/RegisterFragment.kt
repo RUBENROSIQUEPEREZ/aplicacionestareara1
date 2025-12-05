@@ -41,7 +41,7 @@ class RegisterFragment : Fragment() {
     }
 
     // 1. Capturar lo que escribe el usuario
-    private fun setupInputs() {
+    private fun setupInputs(){
         // Captura del nombre de usuario
         binding.tilRegisterUsername.editText?.doOnTextChanged { text, _, _, _ ->
             viewModel.username = text.toString()
@@ -56,6 +56,14 @@ class RegisterFragment : Fragment() {
         binding.tilRegisterConfirmPassword.editText?.doOnTextChanged { text, _, _, _ ->
             viewModel.confirmPassword = text.toString()
         }
+
+        //Captura la fecha
+        binding.etBirthDate.setOnClickListener {
+            showDatePickerDialog()
+        }
+
+
+
     }
 
     // 2. Observar los cambios del ViewModel (LiveData), sin necesidad de comprobar valores manualmente
@@ -98,5 +106,35 @@ class RegisterFragment : Fragment() {
         super.onDestroyView()
         // Evitamos fugas de memoria asociadas al ViewBinding
         _binding = null
+    }
+
+    // Función auxiliar para mostrar el calendario
+    private fun showDatePickerDialog() {
+        // Obtenemos fecha actual para inicializar el calendario
+        val calendar = java.util.Calendar.getInstance()
+        val currentYear = calendar.get(java.util.Calendar.YEAR)
+        val currentMonth = calendar.get(java.util.Calendar.MONTH)
+        val currentDay = calendar.get(java.util.Calendar.DAY_OF_MONTH)
+
+        val datePicker = android.app.DatePickerDialog(
+            requireContext(),
+            { _, year, month, dayOfMonth ->
+                // Al pulsar OK se ejecuta esto:
+                // Formateamos la fecha (Recuerda: month va de 0 a 11, por eso el +1)
+                val selectedDate = "$dayOfMonth/${month + 1}/$year"
+
+                // 1. Actualizamos la Vista (lo que ve el usuario)
+                binding.etBirthDate.setText(selectedDate)
+
+                // 2. Actualizamos el ViewModel (tu lógica de negocio)
+                // Asumo que tienes una variable 'birthDate' en tu NewUserViewModel
+                viewModel.birthDate = selectedDate
+            },
+            currentYear,
+            currentMonth,
+            currentDay
+        )
+
+        datePicker.show()
     }
 }

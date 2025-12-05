@@ -6,44 +6,51 @@ import androidx.lifecycle.ViewModel
 
 class AuthViewModel : ViewModel() {
 
-    // LiveData que controla si el botón de login está habilitado
+    // 1. Ahora los datos son LiveData (Cajas observables)
+    // Esto coincide con la imagen: val username = MutableLiveData<String>()
+    val username = MutableLiveData<String>()
+    val password = MutableLiveData<String>()
+
+    // Estado del botón (igual que antes)
     private val _isLoginButtonEnabled = MutableLiveData<Boolean>()
     val isLoginButtonEnabled: LiveData<Boolean> = _isLoginButtonEnabled
 
-    // LiveData que devuelve si el login es correcto/incorrecto
+    // Resultado del login (igual que antes)
     private val _loginResult = MutableLiveData<Boolean>()
     val loginResult: LiveData<Boolean> = _loginResult
 
-
-    //variables para almacenar datos
-    private var usernameData: String = ""
-    private var passwordData: String = ""
-
-
-    //SETTERS, que debe de llamer el fragment
-
-    fun setUsername(newUsername: String) {
-        usernameData = newUsername // 1. Actualiza el dato privado
-        checkCredentialsValidity() // 2. Llama a la validación manualmente
+    init {
+        // Estado inicial
+        _isLoginButtonEnabled.value = false
     }
 
-    // Lo mismo para la contraseña.
-    fun setPassword(newPassword: String) {
-        passwordData = newPassword // 1. Actualiza el dato privado
-        checkCredentialsValidity() // 2. Llama a la validación manualmente
+    // 2. Funciones que llama la Vista al escribir
+    // En la imagen se llamaban 'onUsernameChanged'
+    fun onUsernameChanged(newUsername: String) {
+        username.value = newUsername // Guardamos dentro de la caja
+        validateFields()
     }
 
-    //Validacion de credenciales
-    fun checkCredentialsValidity() {
-        // username debe tener al menos 1 caracter
-        // password debe tener al menos 4
-        val isValid = usernameData.length >= 1 && passwordData.length >= 4
+    fun onPasswordChanged(newPassword: String) {
+        password.value = newPassword // Guardamos dentro de la caja
+        validateFields()
+    }
+
+    // 3. Validación leyendo de las cajas
+    private fun validateFields() {
+        // CUIDADO: .value puede ser nulo, por eso usamos el operador elvis ?: ""
+        val currentUsername = username.value ?: ""
+        val currentPassword = password.value ?: ""
+
+        val isValid = currentUsername.length >= 1 && currentPassword.length >= 4
         _isLoginButtonEnabled.value = isValid
     }
 
     fun performLogin() {
-        // login success si coincide con los valores establecidos
-        val success = usernameData == "admin" && passwordData == "1234"
+        val currentUsername = username.value ?: ""
+        val currentPassword = password.value ?: ""
+
+        val success = currentUsername == "admin" && currentPassword == "1234"
         _loginResult.value = success
     }
 }

@@ -1,8 +1,10 @@
 package com.example.myapplication1.viewmodels
 
+import android.R
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import java.util.Calendar
 
 class NewUserViewModel : ViewModel() {
 
@@ -42,6 +44,12 @@ class NewUserViewModel : ViewModel() {
             validateForm()
         }
 
+    var birthDate: String = ""
+        set(value) {
+            field = value
+            validateForm()
+        }
+
     // Lógica de validación del register
 
     private fun validateForm() {
@@ -51,6 +59,8 @@ class NewUserViewModel : ViewModel() {
 
         // Regla 2: Las contraseñas deben coincidir
         val passwordsCoincide = password == confirmPassword
+
+        val isDateSelected = birthDate.isNotEmpty()
 
         // Actualizar estado de Error:
         // Mostramos error SOLO si ambos campos tienen texto y NO coinciden.
