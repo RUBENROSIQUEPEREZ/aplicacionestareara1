@@ -124,7 +124,12 @@ class ListFragment : Fragment() {
         viewModel.toggleFavorite(book)
 
         // 2. Mostramos un mensaje de confirmación al usuario
-        val mensaje = if (book.isFavorite) "Marcado como favorito" else "Desmarcado"
+        // CAMBIO: Usamos getString() para leer el idioma correcto
+        val mensaje = if (book.isFavorite) {
+            getString(R.string.msg_fav_added)
+        } else {
+            getString(R.string.msg_fav_removed)
+        }
 
         val sonidofav = if (book.isFavorite) R.raw.sound else R.raw.sound1
 

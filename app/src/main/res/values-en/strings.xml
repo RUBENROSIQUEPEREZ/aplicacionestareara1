@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">The Library</string>
+    <string name="app_name">Bodybuilder</string>
 
     <string name="login_title">Login</string>
     <string name="label_usuario">Username</string>
@@ -29,6 +29,7 @@
     <string name="menu_list">Book List</string>
     <string name="menu_contact">Contact</string>
     <string name="menu_preferences">Preferences</string>
+    <string name="general_settings">General settings</string>
 
     <string name="menu_account_section">Account</string>
     <string name="menu_logout">Log Out</string>

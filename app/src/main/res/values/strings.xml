@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">La Librería</string>
+    <string name="app_name">Culturistas</string>
 
     <string name="login_title">Inicio de Sesión</string>
     <string name="label_usuario">Usuario</string>
@@ -30,6 +30,8 @@
     <string name="menu_contact">Contacto</string>
     <string name="menu_preferences">Preferencias</string>
 
+    <string name="general_settings">Ajustes generales</string>
+
     <string name="menu_account_section">Cuenta</string>
     <string name="menu_logout">Cerrar Sesión</string>
     <string name="nav_header_name">Usuario de Prueba</string>
@@ -48,5 +50,4 @@
 
     <string name="msg_fav_added">Marcado como favorito</string>
     <string name="msg_fav_removed">Desmarcado de favoritos</string>
-
 </resources>

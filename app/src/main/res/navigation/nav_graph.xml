@@ -38,17 +38,17 @@
     <fragment
         android:id="@+id/tabFragment"
         android:name="com.example.myapplication1.fragments.TabFragment"
-        android:label="fragment_tab"
+        android:label="@string/app_name"
         tools:layout="@layout/fragment_tab" />
     <fragment
         android:id="@+id/contactFragment"
         android:name="com.example.myapplication1.fragments.ContactFragment"
-        android:label="Contacto"
+        android:label="@string/menu_contact"
         tools:layout="@layout/fragment_contact" />
 
     <fragment
         android:id="@+id/preferencesFragment"
         android:name="com.example.myapplication1.fragments.PreferencesFragment"
-        android:label="Preferencias"
+        android:label="@string/menu_preferences"
         tools:layout="@layout/fragment_preferences" />
 </navigation>
