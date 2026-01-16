@@ -4,16 +4,16 @@
     <item
         android:id="@+id/tabFragment"
         android:icon="@android:drawable/ic_menu_agenda"
-        android:title="Lista" />
+        android:title="@string/tab_list" />
 
     <item
         android:id="@+id/contactFragment"
         android:icon="@android:drawable/ic_menu_call"
-        android:title="Contacto" />
+        android:title="@string/menu_contact" />
 
     <item
         android:id="@+id/preferencesFragment"
         android:icon="@android:drawable/ic_menu_preferences"
-        android:title="Preferencias" />
+        android:title="@string/menu_preferences" />
 
 </menu>

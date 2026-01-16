@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">My Application</string>
+    <string name="app_name">The Library</string>
 
     <string name="login_title">Login</string>
     <string name="label_usuario">Username</string>
@@ -13,6 +13,7 @@
     <string name="hint_password">Password</string>
     <string name="hint_confirm_password">Confirm password</string>
     <string name="button_create_account">Register</string>
+    <string name="hint_birth_date">Birth date</string>
 
     <string name="button_login">Log In</string>
     <string name="button_google_login">Google</string>
@@ -21,11 +22,31 @@
     <string name="snackbar_not_implemented">Feature not available yet</string>
     <string name="snackbar_action_close">Close</string>
     <string name="error_password_mismatch">Passwords do not match</string>
-    <string name="hint_birth_date">Birth date</string>
 
-    <string name="login_success">Inicio de sesión exitoso</string>
-    <string name="login_error">Error en el inicio de sesión</string>
+    <string name="login_success">Login successful</string>
+    <string name="login_error">Login error</string>
+
+    <string name="menu_list">Book List</string>
+    <string name="menu_contact">Contact</string>
+    <string name="menu_preferences">Preferences</string>
+
+    <string name="menu_account_section">Account</string>
+    <string name="menu_logout">Log Out</string>
+    <string name="nav_header_name">Test User</string>
+    <string name="nav_header_email">user@example.com</string>
+    <string name="desc_user_avatar">User Avatar</string>
+
+    <string name="menu_search">Search</string>
+    <string name="menu_sort">Sort</string>
+
+    <string name="title_contact_fragment">Contact Screen</string>
+    <string name="title_preferences_fragment">Preferences Screen</string>
 
     <string name="tab_list">List</string>
     <string name="tab_favorites">Favourites</string>
+    <string name="desc_add_button">Add new item</string>
+
+    <string name="msg_fav_added">Marked as favorite</string>
+    <string name="msg_fav_removed">Removed from favorites</string>
+
 </resources>
