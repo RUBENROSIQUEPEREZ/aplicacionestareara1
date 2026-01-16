@@ -40,4 +40,15 @@
         android:name="com.example.myapplication1.fragments.TabFragment"
         android:label="fragment_tab"
         tools:layout="@layout/fragment_tab" />
+    <fragment
+        android:id="@+id/contactFragment"
+        android:name="com.example.myapplication1.fragments.ContactFragment"
+        android:label="Contacto"
+        tools:layout="@layout/fragment_contact" />
+
+    <fragment
+        android:id="@+id/preferencesFragment"
+        android:name="com.example.myapplication1.fragments.PreferencesFragment"
+        android:label="Preferencias"
+        tools:layout="@layout/fragment_preferences" />
 </navigation>

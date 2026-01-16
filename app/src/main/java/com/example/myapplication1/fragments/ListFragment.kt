@@ -70,7 +70,7 @@ class ListFragment : Fragment() {
         // 2. Mostramos un mensaje de confirmación al usuario
         val mensaje = if (book.isFavorite) "Marcado como favorito" else "Desmarcado"
 
-        val sonidofav = if (book.isFavorite) R.raw.sound1 else R.raw.sound1
+        val sonidofav = if (book.isFavorite) R.raw.sound else R.raw.sound1
 
         val mediaPlayer = MediaPlayer.create(context, sonidofav)
         mediaPlayer.start()
