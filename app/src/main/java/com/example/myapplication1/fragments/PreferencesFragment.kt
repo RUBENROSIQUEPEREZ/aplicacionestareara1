@@ -34,8 +34,6 @@ class PreferencesFragment : Fragment() {
             if (isChecked) cambiarIdioma("en") else cambiarIdioma("es")
         }
 
-        // --- LÓGICA TEMA (NUEVO) ---
-
         // 1. Detectar si el modo oscuro está activo actualmente
         // Miramos la configuración del sistema para ver si está en NOCHE (YES)
         val currentNightMode = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK
@@ -55,7 +53,6 @@ class PreferencesFragment : Fragment() {
                 )
             }
         }
-        // --- LÓGICA NOTIFICACIONES (CORREGIDA CON MEMORIA) ---
 
         // 1. Abrimos el archivo de preferencias (La "libreta" donde apuntamos cosas)
         val prefs = requireActivity().getSharedPreferences("MisPreferencias", Context.MODE_PRIVATE)
@@ -92,7 +89,7 @@ class PreferencesFragment : Fragment() {
         // 2. Actualizar la configuración de la app
         resources.updateConfiguration(config, resources.displayMetrics)
 
-        // 3. ¡IMPORTANTE! Reiniciar la actividad para ver los cambios
+        // 3.  Reiniciar la actividad para ver los cambios
         requireActivity().recreate()
     }
 
