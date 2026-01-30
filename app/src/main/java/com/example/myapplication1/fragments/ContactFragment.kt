@@ -36,7 +36,7 @@ class ContactFragment : Fragment() {
         binding.videoBackground.setOnPreparedListener { mediaPlayer ->
             mediaPlayer.isLooping = true // Que se repita infinitamente
 
-            // Ajuste para que el video llene la pantalla sin deformarse demasiadO
+            // Ajuste para que el video llene la pantalla sin deformarse demasiado
             val videoRatio = mediaPlayer.videoWidth / mediaPlayer.videoHeight.toFloat()
             val screenRatio = binding.videoBackground.width / binding.videoBackground.height.toFloat()
             val scaleX = videoRatio / screenRatio
