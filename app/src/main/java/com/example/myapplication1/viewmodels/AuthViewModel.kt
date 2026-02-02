@@ -3,9 +3,10 @@ package com.example.myapplication1.viewmodels
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import com.example.myapplication1.repository.AuthRepository
 
 // heredamos de viewmodel para que los datos no se borren si giramos el movil
-class AuthViewModel : ViewModel() {
+class AuthViewModel(repository: AuthRepository) : ViewModel() {
 
     // usamos mutablelivedata que son como cajas que la vista puede observar
     // si el dato cambia aqui dentro la pantalla se entera automaticamente
