@@ -1,5 +1,6 @@
 package com.example.myapplication1.viewmodels
 
+import AuthViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import com.example.myapplication1.repository.AuthRepository // Ajusta tu paquete

@@ -1,5 +1,6 @@
 package com.example.myapplication1.fragments
 
+import android.app.DatePickerDialog
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -8,25 +9,35 @@ import android.widget.Toast
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.example.myapplication1.R
 import com.example.myapplication1.databinding.FragmentRegisterBinding
+import com.example.myapplication1.di.ServiceLocator
+import com.example.myapplication1.viewmodels.NewUserUiState
 import com.example.myapplication1.viewmodels.NewUserViewModel
+import com.example.myapplication1.viewmodels.NewUserViewModelFactory
+import kotlinx.coroutines.launch
+import java.util.Calendar
 
 class RegisterFragment : Fragment() {
-
-    // variable para acceder a los elementos visuales del xml de forma segura
     private var _binding: FragmentRegisterBinding? = null
     private val binding get() = _binding!!
 
-    // conectamos con el viewmodel para que los datos no se pierdan al girar la pantalla
-    private val viewModel: NewUserViewModel by viewModels()
+    // Inyección del ViewModel usando la Factory y ServiceLocator (Correcto según Tarea 4)
+    private val viewModel: NewUserViewModel by viewModels {
+        NewUserViewModelFactory(
+            ServiceLocator.authRepository,
+            ServiceLocator.userRepository
+        )
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        // cargamos el diseño visual de la pantalla de registro
         _binding = FragmentRegisterBinding.inflate(inflater, container, false)
         return binding.root
     }
@@ -34,103 +45,129 @@ class RegisterFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        setupInputs() // configuramos los campos de texto
-        setupObservers()  // empezamos a vigilar los cambios del viewmodel
-        setupButtons() // configuramos el boton de registrar
+        // Inicialmente deshabilitamos el botón hasta que los datos sean válidos
+        binding.btnRegister.isEnabled = false
+
+        setupInputs()
+        setupObservers()
+        setupButtons()
     }
 
-    // funcion para capturar lo que escribe el usuario
-    private fun setupInputs(){
-        // cuando escribe el nombre de usuario se lo pasamos al viewmodel
+    private fun setupInputs() { // FALTABA ESTA LLAVE DE APERTURA {
+
+        // 1. Email / Usuario
         binding.tilRegisterUsername.editText?.doOnTextChanged { text, _, _, _ ->
+            // Enviamos el dato al ViewModel
             viewModel.username = text.toString()
+            // Comprobamos si podemos activar el botón
+            checkFormState()
         }
 
-        // lo mismo para la contraseña
+        // 2. Contraseña
         binding.tilRegisterPassword.editText?.doOnTextChanged { text, _, _, _ ->
             viewModel.password = text.toString()
+            checkFormState()
         }
 
-        // y para confirmar la contraseña
+        // 3. Confirmar Contraseña
         binding.tilRegisterConfirmPassword.editText?.doOnTextChanged { text, _, _, _ ->
             viewModel.confirmPassword = text.toString()
+            checkFormState()
         }
 
-        // para la fecha usamos un clic porque no dejamos escribir a mano
+        // 4. Fecha de nacimiento
         binding.etBirthDate.setOnClickListener {
             showDatePickerDialog()
         }
+
+        // Botón para ir al Login si ya tienes cuenta
+        binding.tvLogin?.setOnClickListener {
+            findNavController().navigate(R.id.action_registerFragment_to_loginFragment)
+        }
     }
 
-    // funcion para reaccionar a lo que decida el viewmodel
+    // FUNCIÓN NUEVA: Valida el formulario en tiempo real
+    private fun checkFormState() {
+        val username = binding.tilRegisterUsername.editText?.text.toString().trim()
+        val password = binding.tilRegisterPassword.editText?.text.toString().trim()
+        val confirmPassword = binding.tilRegisterConfirmPassword.editText?.text.toString().trim()
+        val birthDate = binding.etBirthDate.text.toString().trim()
+
+        // REGLAS DE VALIDACIÓN (Tarea 4):
+        val isUsernameValid = username.isNotEmpty()
+        // La contraseña debe tener al menos 6 caracteres [1]
+        val isPasswordValid = password.length >= 6
+        val doPasswordsMatch = password == confirmPassword
+        val isDateValid = birthDate.isNotEmpty()
+
+        // El botón solo se activa si TODO es correcto
+        binding.btnRegister.isEnabled = isUsernameValid && isPasswordValid && doPasswordsMatch && isDateValid
+    }
+
     private fun setupObservers() {
-        // activamos o desactivamos el boton segun si el formulario esta completo
-        viewModel.isRegisterButtonEnabled.observe(viewLifecycleOwner) { isEnabled ->
-            binding.btnRegister.isEnabled = isEnabled
-        }
-
-        // si hay error de contraseñas mostramos el mensaje en rojo
-        viewModel.passwordMatchError.observe(viewLifecycleOwner) { isError ->
-            if (isError) {
-                // mostramos el error usando el texto guardado en strings xml
-                binding.tilRegisterConfirmPassword.error = getString(R.string.error_password_mismatch)
-            } else {
-                // quitamos el error
-                binding.tilRegisterConfirmPassword.error = null
-            }
-        }
-
-        // si el registro sale bien navegamos al login
-        viewModel.registrationSuccess.observe(viewLifecycleOwner) { isSuccess ->
-            if (isSuccess) {
-                Toast.makeText(context, "Cuenta creada con éxito", Toast.LENGTH_SHORT).show()
-                // volvemos a la pantalla de login borrando el historial
-                findNavController().navigate(R.id.action_registerFragment_to_loginFragment)
+        viewLifecycleOwner.lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                // Observamos el StateFlow (Requisito Tarea 4) [2]
+                viewModel.uiState.collect { state ->
+                    when(state) {
+                        is NewUserUiState.Idle -> {
+                            binding.progressBar.visibility = View.GONE
+                            binding.btnRegister.isEnabled = true // Reactivar si hubo error y se corrigió
+                        }
+                        is NewUserUiState.Loading -> {
+                            binding.progressBar.visibility = View.VISIBLE
+                            binding.btnRegister.isEnabled = false // Evitar doble click
+                        }
+                        is NewUserUiState.Created -> { // Usamos Created en lugar de Authenticated [3]
+                            binding.progressBar.visibility = View.GONE
+                            Toast.makeText(context, "Usuario creado correctamente", Toast.LENGTH_SHORT).show()
+                            findNavController().navigate(R.id.action_registerFragment_to_loginFragment)
+                        }
+                        is NewUserUiState.Error -> {
+                            binding.progressBar.visibility = View.GONE
+                            binding.btnRegister.isEnabled = true
+                            Toast.makeText(context, state.message, Toast.LENGTH_LONG).show()
+                        }
+                    }
+                }
             }
         }
     }
 
-    // configuramos que pasa al pulsar el boton
     private fun setupButtons() {
         binding.btnRegister.setOnClickListener {
+            // Al hacer clic, el ViewModel lanza la corrutina para crear el usuario
             viewModel.createAccount()
         }
     }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        // limpiamos la memoria al salir de la pantalla
-        _binding = null
-    }
-
-    // funcion extra para enseñar el calendario
     private fun showDatePickerDialog() {
-        // cogemos la fecha de hoy para que el calendario empiece ahi
-        val calendar = java.util.Calendar.getInstance()
-        val currentYear = calendar.get(java.util.Calendar.YEAR)
-        val currentMonth = calendar.get(java.util.Calendar.MONTH)
-        val currentDay = calendar.get(java.util.Calendar.DAY_OF_MONTH)
+        val calendar = Calendar.getInstance()
+        val currentYear = calendar.get(Calendar.YEAR)
+        val currentMonth = calendar.get(Calendar.MONTH)
+        val currentDay = calendar.get(Calendar.DAY_OF_MONTH)
 
-        // creamos el dialogo del calendario
-        val datePicker = android.app.DatePickerDialog(
+        val datePicker = DatePickerDialog(
             requireContext(),
             { _, year, month, dayOfMonth ->
-                // esto se ejecuta al pulsar ok en el calendario
-                // formatea la fecha sumando 1 al mes porque empiezan en 0
+                // Nota: Sumamos 1 al mes porque Calendar.MONTH empieza en 0
                 val selectedDate = "$dayOfMonth/${month + 1}/$year"
 
-                // ponemos la fecha en la caja de texto
                 binding.etBirthDate.setText(selectedDate)
-
-                // y tambien la guardamos en el viewmodel
                 viewModel.birthDate = selectedDate
+
+                // IMPORTANTE: Validar también cuando cambiamos la fecha
+                checkFormState()
             },
             currentYear,
             currentMonth,
             currentDay
         )
-
-        // mostramos el calendario en pantalla
         datePicker.show()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

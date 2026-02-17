@@ -8,68 +8,87 @@ import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.example.myapplication1.databinding.FragmentFavBinding
-import com.example.myapplication1.recycler.Book
+import com.example.myapplication1.di.ServiceLocator
 import com.example.myapplication1.recycler.BookAdapter
 import com.example.myapplication1.viewmodels.ListViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import com.example.myapplication1.databinding.FragmentListBinding // Reutilizamos el layout de lista o crea FragmentFavBinding
+import com.example.myapplication1.viewmodels.ListViewModelFactory
+import kotlinx.coroutines.launch
 
 class FavFragment : Fragment() {
 
-    // Variable para poder tocar los elementos de la pantalla (el XML)
-    private var _binding: FragmentFavBinding? = null
-    private val binding get() = _binding!!
+    class FavFragment : Fragment() {
 
-    // CONEXIÓN COMPARTIDA:
-    // Usamos 'activityViewModels' para "enchufarnos" a los mismos datos que la otra pestaña.
-    // Así, si marcas un favorito en la Lista, esta pantalla se entera automáticamente.
-    private val viewModel: ListViewModel by activityViewModels()
+        private var _binding: FragmentListBinding? = null
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View {
-        // Carga el diseño visual de la pantalla
-        _binding = FragmentFavBinding.inflate(inflater, container, false)
-        return binding.root
-    }
+        // Si usas un layout distinto para favoritos, cambia el tipo de binding
+        private val binding get() = _binding!!
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        // Le decimos a la lista que muestre los elementos uno debajo de otro (vertical)
-        binding.rvFavs.layoutManager = LinearLayoutManager(context)
-
-        // OBSERVADOR:
-        // Nos quedamos vigilando la lista de libros. Si algo cambia, este código se ejecuta.
-        viewModel.books.observe(viewLifecycleOwner) { bookList ->
-
-            // EL FILTRO (La clave de esta pantalla):
-            // De toda la lista de libros, creamos una nueva lista SOLO con los que tienen el corazón marcado.
-            val favoriteBooks = bookList.filter { it.isFavorite }
-
-            // PREPARAMOS LOS DATOS PARA PINTARLOS:
-            // Creamos el adaptador pasándole un 'false'.
-            // Esto significa: "Muestra la estrella, pero NO dejes que el usuario la toque aquí".
-            val adapter = BookAdapter(favoriteBooks, isFavoriteClickable = false) { book ->
-                // Este código es de seguridad, por si acaso el click funcionara.
-                onFavoriteClicked(book)
-            }
-
-            // Finalmente, ponemos los libros filtrados en la pantalla
-            binding.rvFavs.adapter = adapter
+        // SOLUCIÓN AL ERROR:
+        // Usamos 'activityViewModels' para compartir los datos con ListFragment
+        // y usamos la Factory para que el repositorio funcione.
+        private val viewModel: ListViewModel by activityViewModels {
+            ListViewModelFactory(
+                ServiceLocator.bookRepository,
+                ServiceLocator.authRepository
+            )
         }
-    }
 
-    // Esta función maneja lo que pasa al hacer clic (mostrar mensaje y actualizar datos)
-    private fun onFavoriteClicked(book: Book) {
-        viewModel.toggleFavorite(book)
-        val mensaje = if (book.isFavorite) "Marcado como favorito" else "Desmarcado"
-        Toast.makeText(context, "${book.title}: $mensaje", Toast.LENGTH_SHORT).show()
-    }
+        override fun onCreateView(
+            inflater: LayoutInflater, container: ViewGroup?,
+            savedInstanceState: Bundle?
+        ): View {
+            // Puedes reutilizar fragment_list.xml si solo tiene un RecyclerView y ProgressBar
+            _binding = FragmentListBinding.inflate(inflater, container, false)
+            return binding.root
+        }
 
-    override fun onDestroyView() {
-        super.onDestroyView()
-        // Limpieza para no ocupar memoria cuando salimos de esta pantalla
-        _binding = null
+        override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+            super.onViewCreated(view, savedInstanceState)
+
+            // 1. Configurar RecyclerView
+            binding.rvBooks.layoutManager = LinearLayoutManager(context)
+
+            // Ocultamos el botón flotante (FAB) porque en favoritos no se añade
+            binding.fab.visibility = View.GONE
+
+            // 2. Crear el Adaptador
+            // REGLA TAREA 2: "El botón de favorito debe estar bloqueado en la lista de favoritos" [1]
+            val adapter = BookAdapter(
+                isFavoriteClickable = false, // Bloqueamos el click
+                onFavoriteClick = { book ->
+                    // Si el usuario intenta clicar (aunque esté bloqueado visualmente),
+                    // mostramos un aviso en lugar de borrarlo.
+                    Toast.makeText(
+                        context,
+                        "Gestione los favoritos desde la lista principal",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            )
+            binding.rvBooks.adapter = adapter
+
+            // 3. Observar datos con StateFlow
+            viewLifecycleOwner.lifecycleScope.launch {
+                // Solución al error de extensión: llamar a repeatOnLifecycle sobre 'lifecycle'
+                viewLifecycleOwner.lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    viewModel.books.collect { allBooks ->
+                        // Filtramos solo los favoritos
+                        val favoriteBooks = allBooks.filter { it.isFavorite }
+
+                        adapter.books = favoriteBooks
+                        adapter.notifyDataSetChanged()
+                    }
+                }
+            }
+        }
+
+        override fun onDestroyView() {
+            super.onDestroyView()
+            _binding = null
+        }
     }
 }

@@ -1,5 +1,6 @@
-package com.example.myapplication1.fragments
+package com.example.myapplication1.fragments // Asegúrate de que el paquete es correcto
 
+import AuthViewModel
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -8,109 +9,128 @@ import android.widget.Toast
 import androidx.core.widget.doOnTextChanged
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import com.example.myapplication1.R
 import com.example.myapplication1.databinding.FragmentLoginBinding
-import com.example.myapplication1.viewmodels.AuthViewModel
+import com.example.myapplication1.di.ServiceLocator
+import com.example.myapplication1.ui.UserUiState // Tu sealed interface
+import com.example.myapplication1.viewmodels.AuthViewModelFactory
+import kotlinx.coroutines.launch
 
 class LoginFragment : Fragment() {
 
-    // --- CONFIGURACIÓN DE VIEWBINDING ---
-    // _binding: Variable privada y mutable que sirve para acceder a los elementos del XML.
-    // Puede ser nula porque la vista se destruye antes que el fragmento.
     private var _binding: FragmentLoginBinding? = null
-
-    // binding: Variable pública que usamos en el código.
-    // El '!!' asegura que, cuando la usemos, no sea nula.
     private val binding get() = _binding!!
 
-    // --- INSTANCIA DEL VIEWMODEL (EL CEREBRO) ---
-    // Usamos el delegado 'by viewModels()'.
-    // Esto crea el ViewModel la primera vez y lo recupera automáticamente si giras la pantalla.
-    private val viewModel: AuthViewModel by viewModels()
+    // --- INSTANCIA DEL VIEWMODEL ---
+    // ACTUALIZACIÓN: Usamos la Factory para inyectar el repositorio desde el ServiceLocator.
+    private val viewModel: AuthViewModel by viewModels {
+        AuthViewModelFactory(ServiceLocator.authRepository)
+    }
 
-    //CREACIÓN DE LA VISTA
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View {
-        // "Inflamos" el diseño XML para convertirlo en código Kotlin utilizable
         _binding = FragmentLoginBinding.inflate(inflater, container, false)
         return binding.root
     }
 
-
-    //METODOS CUANDO LA VISTA ESTA CREADA
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        setupInputs()     // 1. INPUTS: Escuchar lo que escribe el usuario
-        setupObservers()  // 2. OUTPUTS: Reaccionar a lo que dice el ViewModel
-        setupListeners()  // 3. EVENTOS: Gestionar los clics de los botones
+        setupInputs()
+        setupObservers() // Aquí gestionamos los StateFlow
+        setupListeners()
     }
 
-
     private fun setupInputs() {
-        // Cada vez que el usuario escribe una letra en el campo "Usuario"...
+        // Escuchamos cambios y actualizamos el ViewModel
         binding.tilUsername.editText?.doOnTextChanged { text, _, _, _ ->
-            // ...se lo enviamos al ViewModel para que lo guarde y valide.
             viewModel.onUsernameChanged(text.toString())
         }
 
-        // Lo mismo para el campo "Contraseña"
         binding.tilPassword.editText?.doOnTextChanged { text, _, _, _ ->
             viewModel.onPasswordChanged(text.toString())
         }
     }
 
-    // --- SALIDA DE DATOS (ViewModel -> Vista) ---
     private fun setupObservers() {
-        // OBSERVADOR 1: Estado del Botón
-        // Nos quedamos vigilando la variable 'isLoginButtonEnabled' del ViewModel.
-        viewModel.isLoginButtonEnabled.observe(viewLifecycleOwner) { isEnabled ->
-            // Si el ViewModel dice 'true', activamos el botón. Si dice 'false', lo desactivamos.
-            binding.btnLogin.isEnabled = isEnabled
-        }
+        // ACTUALIZACIÓN: StateFlow requiere corrutinas y repeatOnLifecycle
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
 
-        // OBSERVADOR 2: Resultado del Login
-        // Nos quedamos vigilando si el login fue exitoso o fallido.
-        viewModel.loginResult.observe(viewLifecycleOwner) { isSuccess ->
-            if (isSuccess) {
-                // CASO ÉXITO:
-                // 1. Damos feedback positivo al usuario (usando strings.xml)
-                Toast.makeText(requireContext(), getString(R.string.login_success), Toast.LENGTH_SHORT).show()
+                // 1. Observar estado del botón (habilitado/deshabilitado)
+                launch {
+                    viewModel.isLoginButtonEnabled.collect { isEnabled ->
+                        binding.btnLogin.isEnabled = isEnabled
+                    }
+                }
 
-                // 2. NAVEGACIÓN:
-                // Usamos el componente Navigation para ir a la pantalla principal (Tabs).
-                // Al usar el ID del 'action', nos aseguramos de que borre el historial (popUpTo) si así lo configuramos.
-                findNavController().navigate(R.id.action_loginFragment_to_tabFragment)
-            } else {
-                // CASO ERROR:
-                // Avisamos al usuario de que los datos están mal.
-                Toast.makeText(requireContext(), getString(R.string.login_error), Toast.LENGTH_SHORT).show()
+                // 2. Observar el estado de la UI (Carga, Éxito, Error)
+                launch {
+                    viewModel.userUiState.collect { state ->
+                        when (state) {
+                            is UserUiState.Idle -> {
+                                binding.progressBar.visibility = View.GONE
+                            }
+                            is UserUiState.Loading -> {
+                                binding.progressBar.visibility = View.VISIBLE
+                                // Opcional: Desactivar botón mientras carga para evitar doble click
+                                binding.btnLogin.isEnabled = false
+                            }
+                            is UserUiState.Authenticated -> {
+                                binding.progressBar.visibility = View.GONE
+                                Toast.makeText(requireContext(), getString(R.string.login_success), Toast.LENGTH_SHORT).show()
+
+                                // Navegación al éxito
+                                findNavController().navigate(R.id.action_loginFragment_to_tabFragment)
+
+                                // Importante: Resetear estado para evitar re-navegación al volver atrás (opcional)
+                                viewModel.resetState()
+                            }
+                            is UserUiState.Error -> {
+                                binding.progressBar.visibility = View.GONE
+                                // Reactivar botón si fue desactivado en Loading
+                                binding.btnLogin.isEnabled = true
+                                Toast.makeText(requireContext(), state.message, Toast.LENGTH_LONG).show()
+                                viewModel.resetState() // Volver a Idle
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 
     private fun setupListeners() {
-        // Clic en el botón "Iniciar Sesión"
         binding.btnLogin.setOnClickListener {
-            // Le pedimos al ViewModel que intente hacer el login con los datos que ya tiene.
-            viewModel.performLogin()
+            // 1. Capturamos el texto de la vista
+            val email = binding.etUsername.text.toString().trim()
+            val password = binding.etPassword.text.toString().trim()
+
+            // 2. Pequeña validación antes de molestar a Firebase
+            if (email.isNotEmpty() && password.isNotEmpty()) {
+                // 3. Pasamos los datos al ViewModel
+                // Nota: En la Tarea 4 el método sugerido en el diagrama es signIn(email, password)
+                viewModel.signIn(email, password)
+            } else {
+                // Feedback visual si están vacíos
+                Toast.makeText(context, "Por favor, rellena los campos", Toast.LENGTH_SHORT).show()
+            }
         }
 
-        // Clic en el texto/botón "Crear cuenta"
         binding.tvCreateAccount.setOnClickListener {
-            // Navegamos hacia la pantalla de Registro usando la flecha definida en nav_graph.xml
+            // Esto está PERFECTO, asumiendo que el ID coincide con tu nav_graph
             findNavController().navigate(R.id.action_loginFragment_to_registerFragment)
         }
     }
 
-    //libera memoria
     override fun onDestroyView() {
         super.onDestroyView()
-        // Es obligatorio poner el binding a null aquí.
-        // Esto evita "fugas de memoria" porque el Fragmento vive más tiempo que su Vista.
         _binding = null
     }
 }

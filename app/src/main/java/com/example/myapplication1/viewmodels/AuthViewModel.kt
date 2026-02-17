@@ -1,67 +1,110 @@
-package com.example.myapplication1.viewmodels
-
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.example.myapplication1.repository.AuthRepository
+import com.example.myapplication1.ui.UserUiState // Asegúrate de importar tu sealed interface
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
-// heredamos de viewmodel para que los datos no se borren si giramos el movil
-class AuthViewModel(repository: AuthRepository) : ViewModel() {
+class AuthViewModel( val repository: AuthRepository) : ViewModel() {
 
-    // usamos mutablelivedata que son como cajas que la vista puede observar
-    // si el dato cambia aqui dentro la pantalla se entera automaticamente
-    val username = MutableLiveData<String>()
-    val password = MutableLiveData<String>()
+    // 1. GESTIÓN DE DATOS DEL FORMULARIO (StateFlow)
+    // Usamos StateFlow en lugar de LiveData.
+    // _variable es privada y mutable (para escribir).
+    // variable es pública e inmutable (para leer desde la Vista).
 
-    // estado del boton
-    // usamos el guion bajo para la variable privada que solo modificamos nosotros
-    private val _isLoginButtonEnabled = MutableLiveData<Boolean>()
-    // la variable publica es livedata normal para que desde fuera solo puedan leerla no cambiarla
-    val isLoginButtonEnabled: LiveData<Boolean> = _isLoginButtonEnabled
+    private val _username = MutableStateFlow("")
+    val username: StateFlow<String> = _username
 
-    // resultado del login
-    private val _loginResult = MutableLiveData<Boolean>()
-    val loginResult: LiveData<Boolean> = _loginResult
+    private val _password = MutableStateFlow("")
+    val password: StateFlow<String> = _password
 
-    init {
-        // al arrancar el boton tiene que estar desactivado
-        _isLoginButtonEnabled.value = false
-    }
 
-    // funciones que se ejecutan cada vez que escribimos una letra
+
+    // 2. ESTADO DEL BOTÓN
+    private val _isLoginButtonEnabled = MutableStateFlow(false)
+    val isLoginButtonEnabled: StateFlow<Boolean> = _isLoginButtonEnabled
+
+    // 3. ESTADO GENERAL DE LA UI (Idle, Loading, Authenticated, Error)
+    // Reemplaza al simple booleano _loginResult
+    private val _userUiState = MutableStateFlow<UserUiState>(UserUiState.Idle)
+    val userUiState: StateFlow<UserUiState> = _userUiState
+
+    // Funciones para actualizar los campos desde la UI
     fun onUsernameChanged(newUsername: String) {
-        username.value = newUsername // guardamos el texto en la caja
-        validateFields() // comprobamos si ya podemos activar el boton
-    }
-
-    fun onPasswordChanged(newPassword: String) {
-        password.value = newPassword
+        _username.value = newUsername
         validateFields()
     }
 
-    // logica para saber si los datos son validos
+    fun onPasswordChanged(newPassword: String) {
+        _password.value = newPassword
+        validateFields()
+    }
+
+    // Lógica de validación (similar a la tuya, adaptada a StateFlow)
     private fun validateFields() {
-        // usamos el simbolo ?: que significa que si el valor es nulo use una cadena vacia
-        // asi evitamos que la app se cierre por errores de nulos
-        val currentUsername = username.value ?: ""
-        val currentPassword = password.value ?: ""
+        val currentUsername = _username.value
+        val currentPassword = _password.value
 
-        // la regla es que el usuario tenga algo y la contraseña mas de 4 letras
-        val isValid = currentUsername.length >= 1 && currentPassword.length >= 4
-
-        // actualizamos el estado del boton
+        // La regla: usuario no vacío y contraseña >= 6 caracteres (requisito Firebase)
+        val isValid = currentUsername.isNotEmpty() && currentPassword.length >= 6
         _isLoginButtonEnabled.value = isValid
     }
 
-    // funcion que simula el login real
+    // 4. LÓGICA DE LOGIN CON FIREBASE
+    // Ya no es un simple check local, ahora llamamos al repositorio
     fun performLogin() {
-        val currentUsername = username.value ?: ""
-        val currentPassword = password.value ?: ""
+        val email = _username.value
+        val pass = _password.value
 
-        // comprobamos si es el usuario admin con la contraseña 1234
-        val success = currentUsername == "admin" && currentPassword == "1234"
+        // Lanzamos una corrutina porque la operación de red bloquearía el hilo principal
+        viewModelScope.launch {
+            // Emitimos estado de CARGA para que la UI muestre el ProgressBar
+            _userUiState.value = UserUiState.Loading
 
-        // avisamos del resultado final
-        _loginResult.value = success
+            // Llamamos al repositorio (función suspendida)
+            val result = repository.signIn(email, pass)
+
+            // Gestionamos el resultado (Result<FirebaseUser>)
+            result.onSuccess { user ->
+                // Si sale bien, emitimos estado Autenticado con el usuario
+                _userUiState.value = UserUiState.Authenticated(user)
+            }.onFailure { error ->
+                // Si falla, emitimos estado de Error con el mensaje
+                _userUiState.value = UserUiState.Error(error.message ?: "Error desconocido")
+            }
+        }
+    }
+
+    fun signIn(email: String, pass: String) {
+
+        // Validación básica antes de llamar a Firebase
+        if (email.isBlank() || pass.isBlank()) {
+            // Opcional: emitir error si están vacíos
+            return
+        }
+
+        viewModelScope.launch {
+            // Emitimos estado de CARGA
+            _userUiState.value = UserUiState.Loading
+
+            // Llamamos al repositorio (función suspendida que conecta con Firebase)
+            val result = repository.signIn(email, pass)
+
+            // Gestionamos el resultado (Result<FirebaseUser>)
+            result.onSuccess { user ->
+                // Éxito: Emitimos estado Autenticado
+                _userUiState.value = UserUiState.Authenticated(user)
+            }.onFailure { error ->
+                // Fallo: Emitimos estado de Error con el mensaje
+                _userUiState.value = UserUiState.Error(error.message ?: "Error desconocido")
+            }
+        }
+    }
+
+    // Función opcional para limpiar el estado al volver a la pantalla
+    fun resetState() {
+        _userUiState.value = UserUiState.Idle
     }
 }
+
