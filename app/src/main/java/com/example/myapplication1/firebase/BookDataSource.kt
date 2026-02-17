@@ -9,6 +9,7 @@ import kotlinx.coroutines.tasks.await
 class BookDataSource(private val db: FirebaseFirestore) {
 
     private val auth = FirebaseAuth.getInstance()
+    // Guardar un libro en Firestore
 
     suspend fun saveBook(book: Book) {
         // 1. Obtener el usuario actual (Si es null, lanzamos error controlado)
